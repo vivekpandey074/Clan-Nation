@@ -1,35 +1,68 @@
-const express=require("express");
-require('dotenv').config()
-const chats=require("./data");
-const cors=require("cors")
-const app=express();
-const userRouter=require("./routes/users");
-const dbconfig=require("./utils/dbconfig");
+const express = require("express");
+require("dotenv").config();
+const { createServer } = require("node:http");
+const { Server } = require("socket.io");
+const cors = require("cors");
+
+const app = express();
+const server = createServer(app);
+const userRouter = require("./routes/users");
+const dbconfig = require("./utils/dbconfig");
 const authMiddleware = require("./middlewares/authMiddleware");
-const clanRouter=require("./routes/clans")
+const clanRouter = require("./routes/clans");
+const messageRouter = require("./routes/messages");
 
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+});
 
-
-const PORT=process.env.PORT || 5000;
-
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 
-
-
 app.use(express.json());
-app.use(express.urlencoded({extended:false}))
+app.use(express.urlencoded({ extended: false }));
 
+app.use("/api/users", userRouter);
+app.use("/api/clans", clanRouter);
+app.use("/api/messages", messageRouter);
 
-app.use("/api/users",userRouter)
-app.use("/api/clans",authMiddleware,clanRouter)
+io.on("connection", (socket) => {
+  console.log(socket.id);
+  console.log("New user connected to  socket.io");
 
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    console.log("setup");
+    socket.emit("connected");
+  });
 
-app.get("/api/chat/:id",(req,res)=>{
-    const chat=chats.find((c)=> c._id===req.params.id);
-    res.send(chat);
-})
+  socket.on("join-chat", (roomID) => {
+    socket.join(roomID);
+    console.log("User Joined Room: " + roomID);
+  });
 
-app.listen(PORT,()=>{
-    console.log(`Server Listening on Port ${PORT}`)
-})
+  socket.on("new-message", (newmessage, clan) => {
+    var clanId = newmessage.clanId;
+
+    // console.log("New message send:", newmessage, clan);
+
+    clan?.members.forEach((user) => {
+      if (user._id === newmessage.sender) return;
+
+      socket.in(user._id).emit("message-received", newmessage);
+    });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server Listening on Port ${PORT}`);
+});

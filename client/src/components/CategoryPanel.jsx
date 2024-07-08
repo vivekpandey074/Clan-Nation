@@ -6,6 +6,7 @@ import generalclan from "../assets/GeneralClan.svg";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { SetClanCategory } from "../redux/clanCategorySlice";
+import profilepic from "../assets/profilepic.jpeg";
 
 export default function CategoryPanel() {
   const navigate = useNavigate();
@@ -23,6 +24,18 @@ export default function CategoryPanel() {
         <img src={logo} className="h-24 w-full" alt="ClanNation" />
       </div>
       <div className=" cursor-pointer p-2 h-full flex flex-col justify-end overflow-y-scroll no-scrollbar ">
+        <div
+          onClick={() => {
+            navigate("/profile");
+          }}
+          className={`border-box  p-2 flex justify-center items-center aspect-square`}
+        >
+          <img
+            src={profilepic}
+            className="h-12 aspect-square rounded-full "
+            alt="chess.com"
+          />
+        </div>
         <div
           onClick={() => {
             dispatch(SetClanCategory("general"));

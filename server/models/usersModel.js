@@ -49,7 +49,6 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", function (next) {
-  console.log(this);
   if (!this.username) {
     this.username = this.email.split("@")[0];
   }

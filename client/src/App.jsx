@@ -14,7 +14,9 @@ import CreateClan from "./pages/CreateClan/CreateClan";
 import Settings from "./pages/Settings/Settings";
 import DefaultPage from "./pages/DefaultPage/DefaultPage";
 import NotFound from "./pages/NotFound/NotFound";
-
+import Profile from "./pages/Profile/Profile";
+import SearchClan from "./components/SearchClan";
+import BookMarked from "./components/BookMarked";
 function App() {
   const { loading } = useSelector((state) => state.loaders);
 
@@ -39,7 +41,24 @@ function App() {
                     <FindClan />
                   </ProtectedPage>
                 }
-              />
+              >
+                <Route
+                  index
+                  element={
+                    <ProtectedPage>
+                      <SearchClan />
+                    </ProtectedPage>
+                  }
+                />
+                <Route
+                  path="bookmarks"
+                  element={
+                    <ProtectedPage>
+                      <BookMarked />
+                    </ProtectedPage>
+                  }
+                />
+              </Route>
               <Route
                 index
                 element={
@@ -60,7 +79,7 @@ function App() {
                 path="blogs"
                 element={
                   <ProtectedPage>
-                    <GroupChat />
+                    <DefaultPage />
                   </ProtectedPage>
                 }
               />
@@ -68,7 +87,7 @@ function App() {
                 path="updates"
                 element={
                   <ProtectedPage>
-                    <GroupChat />
+                    <DefaultPage />
                   </ProtectedPage>
                 }
               />
@@ -84,15 +103,23 @@ function App() {
                 path="news"
                 element={
                   <ProtectedPage>
+                    <DefaultPage />
+                  </ProtectedPage>
+                }
+              />
+              <Route
+                path="clan/:clanId"
+                element={
+                  <ProtectedPage>
                     <GroupChat />
                   </ProtectedPage>
                 }
               />
               <Route
-                path=":clanId"
+                path="profile"
                 element={
                   <ProtectedPage>
-                    <GroupChat />
+                    <Profile />
                   </ProtectedPage>
                 }
               />

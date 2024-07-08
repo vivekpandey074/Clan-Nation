@@ -13,7 +13,7 @@ const clanSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    language: {
+    clanlanguage: {
       type: String,
       default: "English",
     },
@@ -27,17 +27,26 @@ const clanSchema = new mongoose.Schema(
         ref: "users",
       },
     ],
-    Open: {
+    open: {
       type: Boolean,
-      default: false,
+      default: true,
     },
-    Leader: {
+    leader: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",
     },
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "messages",
+    },
+    clanlocation: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      default: "general",
+      enum: ["general", "chess", "codeforces"],
     },
   },
   {
