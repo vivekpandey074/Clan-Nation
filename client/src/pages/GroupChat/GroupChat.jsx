@@ -3,8 +3,10 @@ import addfileicon from "../../assets/addfileicon.svg";
 import smileemoji from "../../assets/smileemoji.svg";
 import sendbtn from "../../assets/sendbtn.svg";
 import Message from "../../components/Message";
+import modernclan1 from "../../assets/emblems/modernclan1.jpeg";
+import verticaloptions from "../../assets/verticaloptions.svg";
 import "../../index.css";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../../redux/loaderSlice";
 import { toast } from "react-toastify";
@@ -22,7 +24,9 @@ export default function GroupChat() {
   const { clanId } = useParams();
   const [clan, setClan] = useState({});
   const [allmessage, setAllMessages] = useState([]);
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [content, SetContent] = useState("");
   const { user } = useSelector((state) => state.users);
 
@@ -70,6 +74,7 @@ export default function GroupChat() {
     // One more thing- useSelector will trigger re-rendering on getting new value of user.
     // https://www.reddit.com/r/reactjs/comments/ltug1j/does_redux_state_populate_after_useeffect/
 
+    console.log(user);
     if (user) {
       socket = io(ENDPOINT);
       socket.emit("setup", user);
@@ -128,9 +133,39 @@ export default function GroupChat() {
 
   return (
     <div className="text-custom-gray-text h-full w-full border-box flex flex-col">
-      <div className="h-[10vh]  flex items-center justify-center p-2 bg-custom-black-4">
-        <h1 className="text-3xl Bevan-font">{clan?.name}</h1>
+      <div className="h-[15vh] relative flex items-center justify-start gap-2 p-2 bg-custom-black-4">
+        <div className="border-box   p-2 flex justify-center items-center aspect-square">
+          <img
+            src={modernclan1}
+            className="h-20 aspect-square rounded-full "
+            alt="chess.com"
+          />
+        </div>
+        <h1
+          onClick={() => {
+            navigate(`/clan/${clan._id}`);
+          }}
+          className="text-3xl Bevan-font cursor-pointer"
+        >
+          {clan?.name}
+        </h1>
+        <div
+          className="absolute right-10"
+          onClick={() => setShowOptionsMenu((prev) => !prev)}
+        >
+          <img src={verticaloptions} className="h-6" alt="" />
+        </div>
       </div>
+      {showOptionsMenu ? (
+        <div className="absolute right-10 mt-20 p-5 w-[20vh] duration-300 bg-black ease-out rounded-lg z-[100]">
+          <ul className="flex flex-col gap-5 cursor-pointer">
+            <li>Leave Clan</li>
+            <li>Report</li>
+          </ul>
+        </div>
+      ) : (
+        <></>
+      )}
       <div className="h-[65vh]  w-full p-5 overflow-y-scroll scrollable-element pt-[5vh]">
         {allmessage?.length >= 1 ? (
           allmessage.map((message) => <Message message={message} />)

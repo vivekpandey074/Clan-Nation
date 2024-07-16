@@ -3,7 +3,7 @@ import "../index.css";
 import searchicon from "../assets/searchicon2.svg";
 import "../index.css";
 import swordsclashing from "../assets/swordclashing.svg";
-import clan1 from "../assets/emblems/clanemblem3.png";
+import clan1 from "../assets/emblems/modernclan2.jpeg";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../redux/loaderSlice";
@@ -13,7 +13,6 @@ import { GetJoinedClansApi } from "../apis/clans";
 
 export default function MinorLeftPanel() {
   const navigate = useNavigate();
-  const [joinedClans, setJoinedClans] = useState([]);
   const dispatch = useDispatch();
   const { joinedclans } = useSelector((state) => state.joinedclans);
 
@@ -28,7 +27,7 @@ export default function MinorLeftPanel() {
         throw new Error(response.message);
       }
     } catch (err) {
-      SetLoader(false);
+      dispatch(SetLoader(false));
       toast.error(err.message, { position: "top-right" });
     }
   };
@@ -38,7 +37,7 @@ export default function MinorLeftPanel() {
   }, []);
 
   return (
-    <div className="h-full w-[24vw] bg-custom-black-2 flex flex-col">
+    <div className="h-full w-[24vw] bg-custom-black-1 flex flex-col">
       <div className="  p-5 h-[28vh] ">
         <div className="flex flex-wrap flex-col items-center justify-center gap-2">
           <button
@@ -78,21 +77,21 @@ export default function MinorLeftPanel() {
           </div>
         </div>
       </div>
-      <div className="h-full w-full p-3 overflow-y-scroll flex flex-col  gap-3 no-scrollbar ">
+      <div className="h-full w-full p-3 overflow-y-scroll flex flex-col  gap-3 no-scrollbar bg-custom-black-2 border-t border-black">
         {joinedclans?.length >= 1 ? (
           joinedclans?.map((clan) => {
             return (
               <div
                 onClick={() => {
-                  navigate(`/clan/${clan._id}`);
+                  navigate(`/chat/clan/${clan._id}`);
                 }}
-                className="flex gap-2 p-4 h-[8vw] cursor-pointer "
+                className="flex gap-2 p-4 h-[8vw] cursor-pointer hover:scale-105 ease-out duration-300 hover:bg-black rounded-lg  "
                 key={clan._id}
               >
                 <img
                   src={clan1}
                   alt="clanimg"
-                  className="grow-[1] aspect-square h-20"
+                  className="aspect-square h-20 aspect-square rounded-full"
                 />
                 <div className="flex flex-col text-custom-gray-text  grow-[3]">
                   <h1 className="text-xl">{clan.name}</h1>

@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
-import clan1 from "../assets/emblems/clanemblem6.png";
+import modernclan1 from "../assets/emblems/modernclan1.jpeg";
 import "../index.css";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { JoinClanApi, LeaveClanApi, SearchClanApi } from "../apis/clans";
 import { SetLoader } from "../redux/loaderSlice";
 import { SetJoinedClans } from "../redux/joinedClansSlice";
-
+import trophy from "../assets/trophy2.svg";
+import { useNavigate } from "react-router-dom";
 export default function SearchClan() {
   const [query, setQuery] = useState("");
   const [clanList, setClanList] = useState([]);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.users);
-  const { joinedclans } = useSelector((state) => state.joinedclans);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     handleSubmit();
@@ -34,49 +36,6 @@ export default function SearchClan() {
       toast.error(err.message || "Error while fetching clans", {
         position: "top-right",
       });
-    }
-  };
-
-  const handleJoinClan = async (clan) => {
-    try {
-      dispatch(SetLoader(true));
-      console.log(clan);
-      const response = await JoinClanApi(clan, user);
-      dispatch(SetLoader(false));
-      if (response.success) {
-        dispatch(SetJoinedClans([...joinedclans, clan]));
-        handleSubmit();
-        toast.success("Clan joined successfully");
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (err) {
-      dispatch(SetLoader(false));
-      toast.error(err.message || "Error while joining clan", {
-        position: "top-right",
-      });
-    }
-  };
-
-  const handleleaveclan = async (clan) => {
-    try {
-      dispatch(SetLoader(true));
-      const response = await LeaveClanApi(clan);
-      dispatch(SetLoader(false));
-      if (response.success) {
-        handleSubmit();
-        dispatch(SetJoinedClans(joinedclans.filter((x) => x._id !== clan._id)));
-        toast.success("Clan leaved succesfully");
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (err) {
-      dispatch(SetLoader(false));
-      toast.error(
-        err.message || "Error while leaving clan",
-
-        { position: "top-right" }
-      );
     }
   };
 
@@ -127,7 +86,7 @@ export default function SearchClan() {
         </div>
       </form>
 
-      <div className="h-2/3 w-full  p-3 overflow-y-scroll flex flex-col bg-gray-600 gap-3 no-scrollbar ">
+      <div className="h-2/3 w-full  p-3 overflow-y-scroll flex flex-col bg-gray-600 gap-3 no-scrollbar p-5 ">
         {clanList.length === 0 ? (
           <>
             <div className="text-white">
@@ -140,30 +99,42 @@ export default function SearchClan() {
 
             return (
               <>
-                <div className="flex gap-2 border-2 border-black glassy rounded-lg bg-[#BFC9CA] hover:bg-[#BFC9CA] p-4 h-[8vw] ">
-                  <img
-                    src={clan1}
-                    alt="clanimg"
-                    className="grow-[1] aspect-square h-50 w-10"
-                  />
-                  <div className="flex flex-col  grow-[3]">
-                    <h1 className="text-xl">{clan.name}</h1>
-                    <p className="text-sm">{clan.description}</p>
+                <div className="flex gap-2  border-black glassy rounded-lg bg-[#BFC9CA] hover:scale-105 ease-out duration-300 hover:bg-[#BFC9CA] p-4 h-[16vh] ">
+                  <div className="h-full flex-1  flex justify-center">
+                    <img
+                      src={modernclan1}
+                      alt="clanimg"
+                      className=" rounded-full aspect-square h-full"
+                    />
+                  </div>
+                  <div className="flex flex-col text-black font-[600] flex-[3] ">
+                    <h1 className="text-xl font-bold">{clan.name}</h1>
+                    <p className="text-sm ">{clan.description}</p>
                     <p className="text-sm">Members: {clan.members.length}</p>
                   </div>
-                  <div className="text-black flex flex-col  gap-2">
-                    <h1 className="text-sm">Points: {clan.points}</h1>
-                    <button
-                      type="submit"
-                      onClick={(e) => {
-                        checkjoin
-                          ? handleleaveclan(clan)
-                          : handleJoinClan(clan);
-                      }}
-                      className="text-white  bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
-                    >
-                      {checkjoin ? "Leave Clan" : "Join Clan"}
-                    </button>
+                  <div className="text-black flex flex-col   gap-2  flex-[2] ">
+                    <div className="flex items-center justify-center ">
+                      <img className="h-8 aspect-square" src={trophy} alt="" />
+                      <h2 className="font-bold">Points: 2701</h2>
+                    </div>
+                    <div className="flex justify-around">
+                      <button
+                        type="submit"
+                        onClick={() => {
+                          navigate(`/clan/${clan._id}`);
+                        }}
+                        className="text-white  bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
+                      >
+                        View clan
+                      </button>
+                      <button
+                        type="submit"
+                        onClick={() => {}}
+                        className="text-white  bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
+                      >
+                        Bookmark
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>

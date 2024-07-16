@@ -17,6 +17,8 @@ import NotFound from "./pages/NotFound/NotFound";
 import Profile from "./pages/Profile/Profile";
 import SearchClan from "./components/SearchClan";
 import BookMarked from "./components/BookMarked";
+import ClanDetails from "./pages/ClanDetails/ClanDetails";
+import EditProfile from "./pages/EditProfile/EditProfile";
 function App() {
   const { loading } = useSelector((state) => state.loaders);
 
@@ -108,7 +110,7 @@ function App() {
                 }
               />
               <Route
-                path="clan/:clanId"
+                path="/chat/clan/:clanId"
                 element={
                   <ProtectedPage>
                     <GroupChat />
@@ -116,10 +118,26 @@ function App() {
                 }
               />
               <Route
-                path="profile"
+                path="profile/:id"
                 element={
                   <ProtectedPage>
                     <Profile />
+                  </ProtectedPage>
+                }
+              />
+              <Route
+                path="clan/:clanId"
+                element={
+                  <ProtectedPage>
+                    <ClanDetails />
+                  </ProtectedPage>
+                }
+              />
+              <Route
+                path="user/edit"
+                element={
+                  <ProtectedPage>
+                    <EditProfile />
                   </ProtectedPage>
                 }
               />

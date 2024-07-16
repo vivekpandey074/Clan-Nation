@@ -63,7 +63,7 @@ const handleSearchClan = asyncHandler(async (req, res) => {
 const handleClanDetails = asyncHandler(async (req, res) => {
   const id = req.params.id;
 
-  const clan = await Clan.findById(id).populate("members", "username _id");
+  const clan = await Clan.findById(id).populate("members");
   if (!clan) throw new ApiError(404, "Clan not found.");
 
   res.status(200).send({

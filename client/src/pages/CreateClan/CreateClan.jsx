@@ -70,11 +70,11 @@ export default function CreateClan() {
       <div className="h-[10vh]  flex items-center justify-center p-2 bg-custom-black-4 ">
         <h1 className="text-3xl Bevan-font ">CREATE CLAN</h1>
       </div>
-      <div className="w-full flex flex justify-center items-center ">
+      <div className="w-full flex flex justify-center items-center h-[90vh]  ">
         <form
           method="post"
           onSubmit={handleCreateClan}
-          className="flex flex-col w-2/3 gap-5 mt-5  h-[80vh] overflow-y-scroll no-scrollbar "
+          className="flex flex-col w-2/3 gap-5 h-[9/10] overflow-y-scroll no-scrollbar "
         >
           <div className=" flex flex-col gap-2">
             {" "}
@@ -132,12 +132,11 @@ export default function CreateClan() {
               />{" "}
               Anyone can join
             </label>
-            <p className="font-[400]  text-sm font-Dmsans h-5 text-[#FF0000]"></p>
           </div>
 
           <button
             type="submit"
-            className="text-white w-1/2 bg-yellow-500 hover:bg-yellow-400 focus:outline-none focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:focus:ring-yellow-900"
+            className="text-white w-1/2 h-10 blue-gradient hover:blue-gradient focus:outline-none  focus:ring-4  font-medium rounded-lg text-sm px-5  text-center me-2 mb-2 "
           >
             CREATE
           </button>

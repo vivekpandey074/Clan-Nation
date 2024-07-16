@@ -10,10 +10,11 @@ const {
   handleUserLogin,
   handleUserRegistration,
   handleGetCurrentUser,
-  handleAvatarUpload,
+  handleUpdateUser,
   handleSearchUser,
   handleSendRequest,
   handleAcceptRequest,
+  handleGetUserProfile,
 } = require("../controllers/users");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -26,14 +27,19 @@ router.post(
 router.post("/login", loginValidator(), handleValidate, handleUserLogin);
 router.get("/get-current-user", authMiddleware, handleGetCurrentUser);
 router.get("/search", authMiddleware, handleSearchUser);
+router.get("/profile/:id", handleGetUserProfile);
 
-router.post(
-  "/upload-profile-picture",
+router.patch(
+  "/update/:id",
   authMiddleware,
-  upload.single("avatar"),
-  handleAvatarUpload
+  upload.fields([
+    { name: "coverImg", maxCount: 1 },
+    { name: "profileImg", maxCount: 1 },
+  ]),
+  handleUpdateUser
 );
 
 router.post("/sendrequest", authMiddleware, handleSendRequest);
 router.put("/acceptrequest", authMiddleware, handleAcceptRequest);
+
 module.exports = router;

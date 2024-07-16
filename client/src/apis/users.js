@@ -26,3 +26,23 @@ export const GetCurrentUser = async () => {
     return err.response.data;
   }
 };
+
+export const GetProfileApi = async (id) => {
+  try {
+    const response = await axiosInstance.get(`/api/users/profile/${id}`);
+
+    return response.data;
+  } catch (err) {
+    return err.response.data;
+  }
+};
+
+export const UpdateProfileApi = async (id, form) => {
+  try {
+    const response = await axiosInstance.patch(`/api/users/update/${id}`, form);
+    console.log(response);
+    return response.data;
+  } catch (err) {
+    return err.response.data;
+  }
+};

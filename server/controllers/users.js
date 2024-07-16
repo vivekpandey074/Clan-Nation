@@ -75,28 +75,68 @@ const handleGetCurrentUser = asyncHandler(async (req, res) => {
   });
 });
 
-const handleAvatarUpload = async (req, res) => {
+const handleGetUserProfile = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const userProfile = await User.findById(id);
+
+  if (!userProfile) throw new ApiError(500, "User not found!");
+
+  res.status(200).send({
+    success: true,
+    message: "User fetched succesfully.",
+    data: userProfile,
+  });
+});
+
+const handleUpdateUser = async (req, res) => {
   try {
-    const response = await cloudinary.uploader.upload(req.file.path, {
-      folder: "ClanNation",
-    });
+    var coverImg = req.files["coverImg"] ? req.files["coverImg"][0] : null;
+    var profileImg = req.files["profileImg"]
+      ? req.files["profileImg"][0]
+      : null;
+    const { id } = req.params;
+    const { username, bio } = req.body;
 
-    const userId = req.body.userId;
+    let coverImgUrl = "";
+    if (coverImg) {
+      coverImgUrl = await cloudinary.uploader.upload(coverImg.path, {
+        folder: "ClanNation",
+      });
+    }
+    let profileImgUrl = "";
+    if (profileImg) {
+      profileImgUrl = await cloudinary.uploader.upload(profileImg.path);
+    }
 
-    await User.findByIdAndUpdate(userId, {
-      $set: { profilepicture: response.secure_url },
-    });
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        username,
+        bio,
+        profilepicture: profileImgUrl.url,
+        coverImage: coverImgUrl.url,
+      },
+      {
+        new: true,
+      }
+    );
 
-    fs.unlinkSync(req.file.path);
-    // this will make sure once file get upload to cloudinary it get removed from serverlocalstorage
+    if (!updatedUser) throw new ApiError(404, "User not found");
+
+    if (coverImg) fs.unlinkSync(coverImg.path);
+    if (profileImg) fs.unlinkSync(profileImg.path);
+    // // this will make sure once file get upload to cloudinary it get removed from serverlocalstorage
 
     res.send({
       success: true,
-      message: "Image Uploaded successfully",
-      url: response.secure_url,
+      message: "User updated succesfully",
+      updatedUser,
     });
   } catch (err) {
-    fs.unlinkSync(req.file.path); // this will make sure once file get upload to cloudinary it get removed from serverlocalstorage
+    if (coverImg) fs.unlinkSync(coverImg.path);
+    if (profileImg) fs.unlinkSync(profileImg.path);
+    // this will make sure once file get upload to cloudinary it get removed from serverlocalstorage
     res.send({
       success: false,
       message: err.message,
@@ -180,8 +220,9 @@ module.exports = {
   handleUserRegistration,
   handleUserLogin,
   handleGetCurrentUser,
-  handleAvatarUpload,
+  handleUpdateUser,
   handleSearchUser,
   handleSendRequest,
   handleAcceptRequest,
+  handleGetUserProfile,
 };

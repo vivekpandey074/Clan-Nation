@@ -10,6 +10,7 @@ export default {
         "custom-black-1": "#424549",
         "custom-gray-text": "#BCBCBC",
         "custom-gray-text-2": "#BFC9CA",
+        "twitter-black": "#292f33",
       },
     },
   },
