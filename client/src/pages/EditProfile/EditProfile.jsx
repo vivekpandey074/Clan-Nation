@@ -149,7 +149,7 @@ export default function EditProfile() {
           method="patch"
           onSubmit={handleUpdateUser}
           encType="multipart/form-data"
-          className="flex flex-col   w-full h-full overflow-y-scroll no-scrollbar "
+          className="flex flex-col   w-full h-full  overflow-y-scroll no-scrollbar "
         >
           <div
             className="w-full h-[30vh]  relative   bg-cover  bg-center bg-no-repeat"

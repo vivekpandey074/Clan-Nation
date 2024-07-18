@@ -8,6 +8,7 @@ import { SetLoader } from "../redux/loaderSlice";
 import { SetJoinedClans } from "../redux/joinedClansSlice";
 import trophy from "../assets/trophy2.svg";
 import { useNavigate } from "react-router-dom";
+import { SetClanBookmarks } from "../redux/bookmarksSlice";
 export default function SearchClan() {
   const [query, setQuery] = useState("");
   const [clanList, setClanList] = useState([]);
@@ -15,6 +16,7 @@ export default function SearchClan() {
   const { user } = useSelector((state) => state.users);
 
   const navigate = useNavigate();
+  const { clanBookmarks } = useSelector((state) => state.clanBookmarks);
 
   useEffect(() => {
     handleSubmit();
@@ -37,6 +39,26 @@ export default function SearchClan() {
         position: "top-right",
       });
     }
+  };
+
+  const handleAddBookmark = async (clan) => {
+    dispatch(SetClanBookmarks([...clanBookmarks, clan]));
+  };
+
+  const handleRemoveBookmark = async (clan) => {
+    dispatch(
+      SetClanBookmarks(clanBookmarks.filter((item) => item._id !== clan._id))
+    );
+  };
+
+  const check = (bookmarks, clan) => {
+    if (!bookmarks || !clan) return false;
+
+    for (let index = 0; index < bookmarks.length; index++) {
+      if (bookmarks[index]._id === clan._id) return true;
+    }
+
+    return false;
   };
 
   return (
@@ -95,8 +117,6 @@ export default function SearchClan() {
           </>
         ) : (
           clanList.map((clan) => {
-            const checkjoin = clan.members.includes(user._id);
-
             return (
               <>
                 <div className="flex gap-2  border-black glassy rounded-lg bg-[#BFC9CA] hover:scale-105 ease-out duration-300 hover:bg-[#BFC9CA] p-4 h-[16vh] ">
@@ -129,10 +149,17 @@ export default function SearchClan() {
                       </button>
                       <button
                         type="submit"
-                        onClick={() => {}}
+                        onClick={() => {
+                          if (!check(clanBookmarks, clan)) {
+                            handleAddBookmark(clan);
+                          } else {
+                            handleRemoveBookmark(clan);
+                          }
+                        }}
                         className="text-white  bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
                       >
-                        Bookmark
+                        {" "}
+                        {check(clanBookmarks, clan) ? "Unmark" : "Bookmark"}
                       </button>
                     </div>
                   </div>

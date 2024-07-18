@@ -7,6 +7,7 @@ const fs = require("fs");
 const ApiError = require("../utils/ApiError.js");
 const Request = require("../models/requestModel.js");
 const { emitEvent } = require("../utils/features.js");
+const axios = require("axios");
 
 const handleUserRegistration = asyncHandler(async (req, res, next) => {
   const { firstname, lastname, email, password } = req.body;
@@ -216,6 +217,43 @@ const handleAcceptRequest = asyncHandler(async (req, res) => {
     message: `Request ${accept === "true" ? "accepted" : "rejected"}`,
   });
 });
+
+const handleVerifyCodeforces = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    const response = await axios.get(
+      `https://codeforces.com/api/user.rating?handle=${username}`
+    );
+
+    console.log(username);
+    const response2 = await axios.get(
+      `https://codeforces.com/api/user.status?handle=${username}&from=1&count=10`
+    );
+    // console.log(response2);
+
+    if (response2?.data?.result[0].problem?.name === "Watermelon") {
+      await User.findByIdAndUpdate(req.body?.userId, {
+        codeforces_account: username,
+      });
+
+      res.send({
+        success: true,
+        message: "User Connected to codeforces successfully.",
+      });
+    } else {
+      throw new ApiError(
+        400,
+        "Can't find the submission for watermelon problem"
+      );
+    }
+  } catch (err) {
+    res.status(400).send({
+      success: false,
+      message: err?.response?.data?.comment || err.message,
+    });
+  }
+};
 module.exports = {
   handleUserRegistration,
   handleUserLogin,
@@ -225,4 +263,5 @@ module.exports = {
   handleSendRequest,
   handleAcceptRequest,
   handleGetUserProfile,
+  handleVerifyCodeforces,
 };

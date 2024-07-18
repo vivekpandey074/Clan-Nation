@@ -3,6 +3,7 @@ import { loaderSlice } from "./loaderSlice";
 import { userSlice } from "./userSlice";
 import { clanCategorySlice } from "./clanCategorySlice";
 import { joinedClanSlice } from "./joinedClansSlice";
+import { bookmarksSlice } from "./bookmarksSlice";
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     users: userSlice.reducer,
     clanCategories: clanCategorySlice.reducer,
     joinedclans: joinedClanSlice.reducer,
+    clanBookmarks: bookmarksSlice.reducer,
   },
 });
 

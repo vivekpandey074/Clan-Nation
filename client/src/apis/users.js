@@ -40,7 +40,18 @@ export const GetProfileApi = async (id) => {
 export const UpdateProfileApi = async (id, form) => {
   try {
     const response = await axiosInstance.patch(`/api/users/update/${id}`, form);
-    console.log(response);
+    return response.data;
+  } catch (err) {
+    return err.response.data;
+  }
+};
+
+export const CodeforcesVerificationApi = async (username) => {
+  try {
+    console.log(username);
+    const response = await axiosInstance.post(`/api/users/verify-codeforces`, {
+      username,
+    });
     return response.data;
   } catch (err) {
     return err.response.data;

@@ -4,7 +4,7 @@ const asyncHandler = (fn) => {
       await fn(req, res, next);
     } catch (err) {
       res.status(err.statusCode || 500).send({
-        success: err.success,
+        success: err.success || false,
         message: err.message || "Internal server error",
       });
     }

@@ -15,6 +15,7 @@ const {
   handleSendRequest,
   handleAcceptRequest,
   handleGetUserProfile,
+  handleVerifyCodeforces,
 } = require("../controllers/users");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -38,6 +39,8 @@ router.patch(
   ]),
   handleUpdateUser
 );
+
+router.post("/verify-codeforces", authMiddleware, handleVerifyCodeforces);
 
 router.post("/sendrequest", authMiddleware, handleSendRequest);
 router.put("/acceptrequest", authMiddleware, handleAcceptRequest);

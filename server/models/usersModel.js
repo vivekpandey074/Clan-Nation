@@ -44,6 +44,13 @@ const userSchema = new mongoose.Schema(
         ref: "users",
       },
     ],
+    codeforces_account: {
+      type: String,
+      default: "",
+    },
+    bio: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

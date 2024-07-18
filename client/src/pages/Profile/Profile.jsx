@@ -66,9 +66,21 @@ export default function Profile() {
           <p>{profile.bio}</p>
         </div>
         <div className=" w-full h-[40vh] flex overflow-scroll no-scrollbar justify-evenly items-center">
-          <UserRatingsCard typeimg={chess} />
-          <UserRatingsCard typeimg={codeforces} />
-          <UserRatingsCard typeimg={GeneralClan} />
+          <UserRatingsCard
+            type={"CHESS"}
+            typeimg={chess}
+            chess_account={profile?.chess_account}
+          />
+          <UserRatingsCard
+            type={"CODEFORCES"}
+            typeimg={codeforces}
+            codeforces_account={profile?.codeforces_account}
+          />
+          <UserRatingsCard
+            type={"GENERAL"}
+            typeimg={GeneralClan}
+            general_account={profile?.general_account}
+          />
         </div>
       </div>
     </div>
