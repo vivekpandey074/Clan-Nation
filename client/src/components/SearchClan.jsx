@@ -3,12 +3,13 @@ import modernclan1 from "../assets/emblems/modernclan1.jpeg";
 import "../index.css";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { JoinClanApi, LeaveClanApi, SearchClanApi } from "../apis/clans";
+import { SearchClanApi } from "../apis/clans";
 import { SetLoader } from "../redux/loaderSlice";
-import { SetJoinedClans } from "../redux/joinedClansSlice";
+
 import trophy from "../assets/trophy2.svg";
 import { useNavigate } from "react-router-dom";
 import { SetClanBookmarks } from "../redux/bookmarksSlice";
+import Pagination from "./Pagination";
 export default function SearchClan() {
   const [query, setQuery] = useState("");
   const [clanList, setClanList] = useState([]);
@@ -17,19 +18,27 @@ export default function SearchClan() {
 
   const navigate = useNavigate();
   const { clanBookmarks } = useSelector((state) => state.clanBookmarks);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    if (query === "") {
+      handleSubmit();
+    }
+  }, [query]);
 
   useEffect(() => {
     handleSubmit();
-  }, []);
-
+  }, [currentPage]);
   const handleSubmit = async (e) => {
     e?.preventDefault();
     try {
       dispatch(SetLoader(true));
-      const response = await SearchClanApi(query);
+      const response = await SearchClanApi(query, currentPage);
       dispatch(SetLoader(false));
       if (response.success) {
         setClanList(() => response.clans);
+        setTotalPages(() => response.totalPages);
       } else {
         throw new Error(response.message);
       }
@@ -100,7 +109,6 @@ export default function SearchClan() {
           />
           <button
             type="submit"
-            disabled={query.trim() === ""}
             className="text-white absolute end-2.5 bottom-2.5 bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
           >
             Search
@@ -167,6 +175,18 @@ export default function SearchClan() {
               </>
             );
           })
+        )}
+        {clanList.length >= 1 ? (
+          <div>
+            {" "}
+            <Pagination
+              totalPages={totalPages}
+              currentPage={currentPage}
+              setCurrenPage={setCurrentPage}
+            />
+          </div>
+        ) : (
+          <></>
         )}
       </div>
     </>

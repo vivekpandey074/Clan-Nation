@@ -9,10 +9,10 @@ const CreateClanApi = async (payload) => {
   }
 };
 
-const SearchClanApi = async (query) => {
+const SearchClanApi = async (query, currentPage) => {
   try {
     const response = await axiosInstance.get(
-      `/api/clans/search?query=${query}`
+      `/api/clans/search?query=${query}&page=${currentPage}`
     );
     return response.data;
   } catch (err) {
@@ -38,10 +38,10 @@ const GetClanDetailsApi = async (clanId) => {
   }
 };
 
-const GetClanMessagesApi = async (clanId) => {
+const GetClanMessagesApi = async (clanId, currentPage) => {
   try {
     const response = await axiosInstance.get(
-      `/api/messages/clan-messages/${clanId}`
+      `/api/messages/clan-messages/${clanId}?page=${currentPage}`
     );
     return response.data;
   } catch (err) {

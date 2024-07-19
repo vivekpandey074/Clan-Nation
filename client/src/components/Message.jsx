@@ -10,11 +10,11 @@ const options = {
   hour: "2-digit", // e.g., 07 AM/PM based on locale
   minute: "2-digit", // e.g., 44
 };
-export default function Message({ message }) {
+export default function Message({ message, Leader }) {
   const navigate = useNavigate();
   return (
     <div className="text-custom-gray-text bg-custom-black-2 mt-2 bt-2 bb-2 p-3">
-      <div className="flex relative">
+      <div className="flex relative ">
         <img
           src={
             message.sender.profilepicture === ""
@@ -25,12 +25,18 @@ export default function Message({ message }) {
           alt=""
         />
 
-        <p
-          className="p-2 text-md cursor-pointer"
-          onClick={() => navigate(`/profile/${message.sender._id}`)}
-        >
-          {message.sender.username}
-        </p>
+        <div className=" flex items-start  flex-col justify-content p-2">
+          <p
+            className="text-md cursor-pointer "
+            onClick={() => navigate(`/profile/${message.sender._id}`)}
+          >
+            {message.sender.username}
+          </p>
+          <p className="text-sm">
+            {" "}
+            {message.sender._id === Leader ? "Leader" : "member"}
+          </p>
+        </div>
         <p className="absolute right-0 text-sm ">
           {new Date(message?.createdAt).toLocaleDateString("en-US", options)}
         </p>

@@ -45,18 +45,38 @@ const handleCreateClan = asyncHandler(async (req, res) => {
 const handleSearchClan = asyncHandler(async (req, res) => {
   const { query } = req.query;
 
+  const { page = 1 } = req.query;
+
+  const result_per_page = 5;
+  const skip = (page - 1) * 5;
+
   let clans = [];
+  let totalResults = [];
   if (query === "") {
-    clans = await Clan.find({});
-  } else
-    clans = await Clan.find({
-      name: { $regex: query, $options: "i" },
-    });
+    [clans, totalResults] = await Promise.all([
+      Clan.find({}).skip(skip).limit(result_per_page),
+      Clan.countDocuments({}),
+    ]);
+  } else {
+    [clans, totalResults] = await Promise.all([
+      Clan.find({
+        name: { $regex: query, $options: "i" },
+      })
+        .skip(skip)
+        .limit(result_per_page),
+      Clan.countDocuments({
+        name: { $regex: query, $options: "i" },
+      }),
+    ]);
+  }
+
+  const totalPages = Math.ceil(totalResults / result_per_page);
 
   await res.status(200).send({
     success: true,
     message: "search completed",
     clans,
+    totalPages,
   });
 });
 

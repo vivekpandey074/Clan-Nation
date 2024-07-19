@@ -67,7 +67,7 @@ const handleGetClanMessages = asyncHandler(async (req, res) => {
   const clanID = req.params.id;
   const { page = 1 } = req.query;
 
-  const result_per_page = 20;
+  const result_per_page = 5;
   const skip = (page - 1) * result_per_page;
 
   const [messages, totalMessageCount] = await Promise.all([
@@ -94,7 +94,7 @@ const handleGetPersonalMessages = asyncHandler(async (req, res) => {
   const receiver = req.params.id;
   const { page = 1 } = req.query;
 
-  const result_per_page = 20;
+  const result_per_page = 5;
   const skip = (page - 1) * result_per_page;
 
   const [messages, totalMessageCount] = await Promise.all([

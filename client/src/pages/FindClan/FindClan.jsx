@@ -17,7 +17,7 @@ export default function FindClan() {
               setTab(1);
             }}
             className={` w-1/2 ${
-              tab === 1 ? "bg-cyan-700 rounded-full text-white" : ""
+              tab === 1 ? "bg-violet-300 rounded-full text-white" : ""
             }  cursor-pointer `}
           >
             <div className=" p-4   rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300">
@@ -30,7 +30,7 @@ export default function FindClan() {
               setTab(2);
             }}
             className={` w-1/2 ${
-              tab === 2 ? "bg-cyan-700 rounded-full" : ""
+              tab === 2 ? "bg-violet-300  rounded-full" : ""
             }  cursor-pointer `}
           >
             <div className="inline-block p-4 text-white  rounded-t-lg active ">

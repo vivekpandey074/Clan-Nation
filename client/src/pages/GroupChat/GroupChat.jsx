@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import addfileicon from "../../assets/addfileicon.svg";
 import smileemoji from "../../assets/smileemoji.svg";
 import sendbtn from "../../assets/sendbtn.svg";
@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../../redux/loaderSlice";
 import { toast } from "react-toastify";
+import InfiniteScroll from "react-infinite-scroll-component";
 import {
   GetClanDetailsApi,
   GetClanMessagesApi,
@@ -25,6 +26,9 @@ export default function GroupChat() {
   const [clan, setClan] = useState({});
   const [allmessage, setAllMessages] = useState([]);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [currentPage, setCurrentPage] = useState(2);
+  const [hasMore, setHasMore] = useState(true);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [content, SetContent] = useState("");
@@ -50,10 +54,29 @@ export default function GroupChat() {
     }
   };
 
+  const fetchMoreData = async () => {
+    console.log("hellow");
+    try {
+      const response = await GetClanMessagesApi(clanId, currentPage);
+      if (response.success) {
+        setAllMessages((prev) => [...response.messages, ...prev]);
+
+        if (response.totalPages <= currentPage) setHasMore(false);
+        else setHasMore(true);
+
+        setCurrentPage((prev) => prev + 1);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      toast.error(err.message || "Error occurred while fetching messages");
+    }
+  };
+
   const getClanMessages = async () => {
     try {
       dispatch(SetLoader(true));
-      const response = await GetClanMessagesApi(clanId);
+      const response = await GetClanMessagesApi(clanId, 1);
       dispatch(SetLoader(false));
       if (response.success) {
         setAllMessages(() => response.messages);
@@ -74,7 +97,6 @@ export default function GroupChat() {
     // One more thing- useSelector will trigger re-rendering on getting new value of user.
     // https://www.reddit.com/r/reactjs/comments/ltug1j/does_redux_state_populate_after_useeffect/
 
-    console.log(user);
     if (user) {
       socket = io(ENDPOINT);
       socket.emit("setup", user);
@@ -93,6 +115,8 @@ export default function GroupChat() {
     if (user) {
       getClanDetails();
       getClanMessages();
+      setCurrentPage(2);
+      setHasMore(true);
     }
 
     selectedChatCompare = clanId;
@@ -102,9 +126,7 @@ export default function GroupChat() {
     socket?.on("message-received", (newmessage) => {
       if (!selectedChatCompare || selectedChatCompare !== newmessage.clan) {
         //give notification
-        console.log("here");
       } else {
-        console.log(newmessage);
         setAllMessages([...allmessage, newmessage]);
       }
     });
@@ -117,7 +139,7 @@ export default function GroupChat() {
       dispatch(SetLoader(false));
       if (response.success) {
         SetContent("");
-        console.log(socket);
+
         setAllMessages([...allmessage, response.newmessage]);
         socket.emit("new-message", response.newmessage, clan);
       } else {
@@ -166,17 +188,40 @@ export default function GroupChat() {
       ) : (
         <></>
       )}
-      <div className="h-[65vh]  w-full p-5 overflow-y-scroll scrollable-element pt-[5vh]">
-        {allmessage?.length >= 1 ? (
-          allmessage.map((message) => <Message message={message} />)
-        ) : (
-          <>
-            <div>
-              <h1>clan does not have any message.</h1>
+
+      <div
+        id="scrollable-div"
+        className="h-[65vh]   flex flex-col-reverse w-full  p-5 overflow-y-scroll scrollable-element pt-[5vh]"
+      >
+        <InfiniteScroll
+          dataLength={allmessage?.length}
+          next={fetchMoreData}
+          hasMore={hasMore}
+          style={{ display: "flex", flexDirection: "column-reverse" }}
+          loader={
+            <div className="flex justify-center">
+              <h4 className="text-white">Loading...</h4>
             </div>
-          </>
-        )}
+          }
+          scrollableTarget="scrollable-div"
+          inverse={true}
+        >
+          {allmessage?.length >= 1 ? (
+            allmessage
+              .toReversed()
+              .map((message) => (
+                <Message message={message} Leader={clan?.leader} />
+              ))
+          ) : (
+            <>
+              <div>
+                <h1>clan does not have any message.</h1>
+              </div>
+            </>
+          )}
+        </InfiniteScroll>
       </div>
+
       <div className="h-[25vh]  w-full flex justify-center items-center p-2">
         <div className="w-full bg-custom-black-2 border-box flex  h-full items-center  p-2 ">
           <textarea

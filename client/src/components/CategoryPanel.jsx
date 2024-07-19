@@ -29,12 +29,12 @@ export default function CategoryPanel() {
           onClick={() => {
             navigate("/user/edit");
           }}
-          className={`border-box  p-2 flex justify-center items-center aspect-square`}
+          className={`border-box   p-2 flex justify-center items-center aspect-square`}
         >
           <img
             src={user?.profilepicture || defaultuser}
-            className="h-12 aspect-square rounded-full "
-            alt="chess.com"
+            className="h-12 aspect-square  rounded-full "
+            alt="profilepic"
           />
         </div>
         <div
