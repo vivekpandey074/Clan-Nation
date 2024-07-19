@@ -80,6 +80,7 @@ export default function GroupChat() {
       dispatch(SetLoader(false));
       if (response.success) {
         setAllMessages(() => response.messages);
+        if (response?.messages?.length === 0) setHasMore(false);
         socket.emit("join-chat", clanId);
       } else {
         throw new Error(response.message);

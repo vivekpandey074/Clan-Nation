@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { CreateClanApi } from "../../apis/clans";
 import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../../redux/loaderSlice";
+import { SetJoinedClans } from "../../redux/joinedClansSlice";
 
 const initialState = {
   name: "",
@@ -20,6 +21,7 @@ export default function CreateClan() {
   const { name, description, clanlanguage, clanlocation, open } = form;
   const dispatch = useDispatch();
   const { clanCategory } = useSelector((state) => state.clanCategories);
+  const { joinedclans } = useSelector((state) => state.joinedclans);
 
   const handleChange = (e) => {
     if (e.target.type === "checkbox") {
@@ -51,6 +53,7 @@ export default function CreateClan() {
 
       if (response.success) {
         toast.success(response.message);
+        dispatch(SetJoinedClans([...joinedclans, response.clan]));
         setForm(() => initialState);
       } else {
         throw new Error(response.message);

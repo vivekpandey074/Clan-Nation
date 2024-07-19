@@ -37,7 +37,7 @@ export default function MinorLeftPanel() {
   }, []);
 
   return (
-    <div className="h-full w-[24vw] bg-custom-black-1 flex flex-col">
+    <div className="h-full w-[24vw] bg-custom-black-2 flex flex-col">
       <div className="  p-5 h-[28vh] ">
         <div className="flex flex-wrap flex-col items-center justify-center gap-2">
           <button
@@ -77,7 +77,7 @@ export default function MinorLeftPanel() {
           </div>
         </div>
       </div>
-      <div className="h-full w-full p-3 overflow-y-scroll flex flex-col  gap-3 no-scrollbar bg-custom-black-2 border-t border-black">
+      <div className="h-full w-full p-3 overflow-y-scroll flex flex-col  gap-3 no-scrollbar bg-twitter-black border-t border-black">
         {joinedclans?.length >= 1 ? (
           joinedclans?.map((clan) => {
             return (

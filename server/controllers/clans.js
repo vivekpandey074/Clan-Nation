@@ -12,12 +12,13 @@ const handleCreateClan = asyncHandler(async (req, res) => {
   const { name, description, clanlanguage, clanlocation, open, category } =
     req.body;
 
-  const clan = await Clan.find({ name });
+  const clan = await Clan.findOne({ name });
+
   if (clan) throw new ApiError(400, "Clan already exist.");
 
   const members = [req.body.userId];
 
-  await Clan.create({
+  const newclan = await Clan.create({
     name,
     description,
     clanlanguage,
@@ -39,6 +40,7 @@ const handleCreateClan = asyncHandler(async (req, res) => {
   res.send({
     success: true,
     message: `Clan ${name.trim()} created successfully.`,
+    clan: newclan,
   });
 });
 
