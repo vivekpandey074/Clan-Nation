@@ -194,7 +194,7 @@ export default function EditProfile() {
               />
             </div>
           </div>
-          <div className="flex flex-col w-full h-[70vh]  items-center  bg-twitter-black overflow-y-scroll no-scrollbar">
+          <div className="flex flex-col w-full h-[70vh]  items-center  bg-custom-black-3 overflow-y-scroll no-scrollbar">
             <div className="w-1/2 p-5 mt-[15vh] ">
               <div className=" flex flex-col gap-2">
                 {" "}

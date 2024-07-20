@@ -30,6 +30,7 @@ export default function SearchClan() {
   useEffect(() => {
     handleSubmit();
   }, [currentPage]);
+
   const handleSubmit = async (e) => {
     e?.preventDefault();
     try {
