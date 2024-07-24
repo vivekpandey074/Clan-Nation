@@ -19,6 +19,10 @@ router.post(
   handleSendAttachment
 );
 router.post("/sendmessage/clan/:clanid", authMiddleware, handleSendMessage);
-router.post("/sendmessage/personal/:clanid", authMiddleware, handleSendMessage);
+router.post(
+  "/sendmessage/personal/:friendId",
+  authMiddleware,
+  handleSendMessage
+);
 
 module.exports = router;

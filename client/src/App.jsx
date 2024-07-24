@@ -19,6 +19,8 @@ import SearchClan from "./components/SearchClan";
 import BookMarked from "./components/BookMarked";
 import ClanDetails from "./pages/ClanDetails/ClanDetails";
 import EditProfile from "./pages/EditProfile/EditProfile";
+import { SocketProvider } from "./socket";
+import OneonOneChat from "./pages/OneonOneChat/OneonOneChat";
 function App() {
   const { loading } = useSelector((state) => state.loaders);
 
@@ -32,7 +34,9 @@ function App() {
               path="/"
               element={
                 <ProtectedPage>
-                  <Home />
+                  <SocketProvider>
+                    <Home />
+                  </SocketProvider>
                 </ProtectedPage>
               }
             >
@@ -126,6 +130,14 @@ function App() {
                 }
               />
               <Route
+                path="/chat/personal/:id"
+                element={
+                  <ProtectedPage>
+                    <OneonOneChat />
+                  </ProtectedPage>
+                }
+              />
+              <Route
                 path="clan/:clanId"
                 element={
                   <ProtectedPage>
@@ -142,6 +154,7 @@ function App() {
                 }
               />
             </Route>
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="*" element={<NotFound />} />

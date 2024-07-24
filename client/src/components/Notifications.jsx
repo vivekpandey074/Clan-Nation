@@ -1,51 +1,116 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { AcceptRequestApi, GetNotificationsApi } from "../apis/users";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { SocketContext } from "../socket";
+import { NEW_REQUEST, REFETCH_NOTIFICATIONS } from "../constants/events";
+import { useDispatch } from "react-redux";
 
 export default function Notifications() {
   const [allNotification, setAllNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [countNotification, setNotifications] = useState(0);
+
+  const navigate = useNavigate();
+
+  const socket = useContext(SocketContext);
+  const handleGetAllNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await GetNotificationsApi();
+      setLoading(false);
+      if (response.success) {
+        setAllNotifications(response.notifications);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setLoading(false);
+      toast.error(
+        err.message || "Something went wrong while fetching notifcations",
+        { position: "top-right" }
+      );
+    }
+  };
+
+  const handleAcceptRequest = async (requestID, accept) => {
+    try {
+      setLoading(true);
+      const response = await AcceptRequestApi(requestID, accept);
+      setLoading(false);
+      if (response.success) {
+        toast.success(response.message);
+        window.location.reload();
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setLoading(false);
+      toast.error(
+        err.message || "Something went wrong while accepting request",
+        { position: "top-right" }
+      );
+    }
+  };
+  useEffect(() => {
+    handleGetAllNotifications();
+  }, [socket]);
+
+  useEffect(() => {
+    socket?.on(NEW_REQUEST, (newnotification) => {
+      setAllNotifications((prev) => [...prev, newnotification]);
+    });
+
+    socket?.on(REFETCH_NOTIFICATIONS, () => {
+      handleGetAllNotifications();
+    });
+  });
 
   return (
-    <div>
-      <div
-        onClick={() => {
-          navigate(`/chat/clan/$`);
-        }}
-        className="flex gap-2 p-4 cursor-pointer  ease-out duration-300 hover:bg-black rounded-lg  "
-      >
-        <div className="flex flex-col text-custom-gray-text  grow-[3]">
-          <h1 className="text-xl">New Friend Request </h1>
-          <div>
-            <button>Accept</button>
-            <button>Reject</button>
-          </div>
-          <p className="text-sm">
-            this is content of notification Lorem ipsum dolor sit amet
-            consectetur, adipisicing elit. Necessitatibus, qui ratione. Sit aut
-            atque optio totam, dicta culpa veniam minima molestiae mollitia eum
-            magnam cum quidem molestias. Corporis veritatis, quidem nam vel,
-            incidunt nesciunt delectus eaque dolores nobis eveniet, adipisci
-            modi! Nam placeat sed ratione possimus unde dolorem modi. Non saepe
-            fugiat accusamus, quaerat fuga autem minus expedita, neque amet
-            cumque itaque tempore atque perspiciatis tenetur, aliquid sit ex
-            animi eligendi quam quisquam ipsum cupiditate a! Consectetur nisi
-            enim consequuntur magnam praesentium necessitatibus quam deleniti
-            illum, aliquam at voluptatibus nemo eveniet tempora ab impedit quos
-            veniam reprehenderit expedita reiciendis dicta soluta optio. Facere
-            corrupti blanditiis repellat ut fugit quos dolor voluptas unde
-            exercitationem pariatur dolorem ex fuga, quaerat, modi suscipit
-            consequatur odit quisquam maxime veritatis ipsam sint molestiae?
-            Expedita rem dignissimos nulla earum beatae aperiam delectus
-            obcaecati. Illum ratione cum unde aperiam non sunt maxime sed
-            cumque, consequuntur iusto est assumenda voluptate eos veniam
-            corrupti repudiandae fuga rerum? Odit dolorum odio voluptate!
-            Corporis, totam quas doloribus eligendi omnis dolorem. Temporibus
-            eaque, vitae alias atque cupiditate facilis laboriosam officia nisi,
-            tenetur nesciunt repellat dolore magnam a ipsam numquam iste eos
-            magni nostrum accusamus odio ullam quos perspiciatis? Explicabo
-            perspiciatis voluptates itaque.
-          </p>
-          <p className="text-sm"></p>
-        </div>
-      </div>
+    <div className="-300 h-full  flex flex-col gap-10 overflow-y-scroll  no-scrollbar p-2">
+      {loading ? (
+        <h3 className="text-custom-gray-text"> Loading...</h3>
+      ) : allNotification.length < 1 ? (
+        <h3 className="text-custom-gray-text">No request for now</h3>
+      ) : (
+        allNotification.map((request) => {
+          return (
+            <div
+              key={request._id}
+              onClick={() => {
+                navigate(`/profile/${request.sender?._id}`);
+              }}
+              className="flex flex-col text-custom-gray-text gap-5 p-4 cursor-pointer bg-custom-black-4 ease-out duration-300 hover:bg-black rounded-lg  "
+            >
+              <h1 className="text-xl text-white">
+                ⚔️ {request?.sender?.username}{" "}
+                <span className="text-sm text-custom-gray-text">
+                  {" "}
+                  sent you friend request
+                </span>
+              </h1>
+              <div className="flex items-center justify-evenly">
+                <button
+                  className="bg-green-500 text-white rounded-md w-1/3"
+                  onClick={() => {
+                    handleAcceptRequest(request._id, true);
+                  }}
+                >
+                  Accept
+                </button>
+                <button
+                  className="bg-red-500 text-white rounded-md w-1/3"
+                  onClick={() => {
+                    handleAcceptRequest(request._id, false);
+                  }}
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }

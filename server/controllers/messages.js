@@ -117,23 +117,36 @@ const handleGetPersonalMessages = asyncHandler(async (req, res) => {
     }),
   ]);
 
+  const totalPages = Math.ceil(totalMessageCount / result_per_page);
+
   res.status(200).send({
     success: true,
     message: "Message retrieved successfully.",
     messages: messages.reverse(),
-    totalMessageCount,
+    totalPages,
   });
 });
 
 const handleSendMessage = asyncHandler(async (req, res) => {
-  const clanID = req.params.clanid;
+  const { clanid, friendId } = req.params;
   const { content } = req.body;
 
-  const message = await Message.create({
-    sender: req.body.userId,
-    clan: clanID,
-    content,
-  });
+  let messageObj;
+  if (clanid) {
+    messageObj = {
+      sender: req.body.userId,
+      clan: clanid,
+      content,
+    };
+  } else if (friendId) {
+    messageObj = {
+      sender: req.body.userId,
+      receiver: friendId,
+      content,
+    };
+  }
+
+  const message = await Message.create(messageObj);
 
   const newmessage = await Message.findById(message._id).populate("sender");
   res.send({

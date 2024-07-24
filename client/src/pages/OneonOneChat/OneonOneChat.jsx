@@ -3,6 +3,7 @@ import addfileicon from "../../assets/addfileicon.svg";
 import smileemoji from "../../assets/smileemoji.svg";
 import sendbtn from "../../assets/sendbtn.svg";
 import Message from "../../components/Message";
+import defaultpicture from "../../assets/defaultuserimage.png";
 import modernclan1 from "../../assets/emblems/modernclan1.jpeg";
 import verticaloptions from "../../assets/verticaloptions.svg";
 import "../../index.css";
@@ -11,22 +12,22 @@ import { useDispatch, useSelector } from "react-redux";
 import { SetLoader } from "../../redux/loaderSlice";
 import { toast } from "react-toastify";
 import InfiniteScroll from "react-infinite-scroll-component";
-import {
-  GetClanDetailsApi,
-  GetClanMessagesApi,
-  SendMessageApi,
-} from "../../apis/clans";
 // import { io } from "socket.io-client";
 import { SocketContext } from "../../socket";
+import {
+  GetPersonalMessagesApi,
+  GetProfileApi,
+  SendPersonalMessageApi,
+} from "../../apis/users";
 
 // const ENDPOINT = "http://localhost:5000";
 // var socket;
 
 var selectedChatCompare;
 
-export default function GroupChat() {
-  const { clanId } = useParams();
-  const [clan, setClan] = useState({});
+export default function OneonOneChat() {
+  const { id } = useParams();
+  const [profile, setProfile] = useState({});
   const [allmessage, setAllMessages] = useState([]);
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [currentPage, setCurrentPage] = useState(2);
@@ -36,31 +37,32 @@ export default function GroupChat() {
   const navigate = useNavigate();
   const [content, SetContent] = useState("");
   const { user } = useSelector((state) => state.users);
+  const [roomID, setRoomID] = useState("");
 
-  // const [socketConnected, setSocketConnected] = useState(false);
-
-  const getClanDetails = async () => {
+  const getProfileDetails = async (id) => {
     try {
       dispatch(SetLoader(true));
-      const response = await GetClanDetailsApi(clanId);
+      const response = await GetProfileApi(id);
       dispatch(SetLoader(false));
       if (response.success) {
-        setClan(() => response.clan);
-        console.log(typeof response.clan._id);
+        setProfile(() => response.data);
       } else {
         throw new Error(response.message);
       }
     } catch (err) {
       dispatch(SetLoader(false));
-      toast.error(err.message || "Could not fetch clan details", {
-        position: "top-right",
-      });
+      toast.error(
+        err.message || "Something went wrong while fetching user profile",
+        {
+          position: "top-right",
+        }
+      );
     }
   };
 
   const fetchMoreData = async () => {
     try {
-      const response = await GetClanMessagesApi(clanId, currentPage);
+      const response = await GetPersonalMessagesApi(id, currentPage);
       if (response.success) {
         setAllMessages((prev) => [...response.messages, ...prev]);
 
@@ -76,59 +78,56 @@ export default function GroupChat() {
     }
   };
 
-  const getClanMessages = async () => {
+  const getPersonalMessages = async () => {
     try {
       dispatch(SetLoader(true));
-      const response = await GetClanMessagesApi(clanId, 1);
+      const response = await GetPersonalMessagesApi(id, 1);
       dispatch(SetLoader(false));
       if (response.success) {
         setAllMessages(() => response.messages);
         if (response?.messages?.length === 0) setHasMore(false);
-        socket.emit("join-chat", clanId);
+        let room;
+
+        if (user?._id < id) {
+          room = `${user?._id}-${id}`;
+        } else {
+          room = `${id}-${user?._id}`;
+        }
+
+        setRoomID(() => room);
+
+        socket.emit("join-chat", room);
       } else {
         throw new Error(response.message);
       }
     } catch (err) {
       dispatch(SetLoader(false));
-      toast.error(err.message || "Could not fetch clan messages", {
+
+      toast.error(err.message || "Could not fetch personal messages", {
         position: "top-right",
       });
     }
   };
 
-  // useEffect(() => {
-  //   //i am using if (user) here, because user is initially empty and useEffect run first then redux value get populated.and user is initally run, that it is also there in dependecny array. for now i dont know solution.
-  //   // One more thing- useSelector will trigger re-rendering on getting new value of user.
-  //   // https://www.reddit.com/r/reactjs/comments/ltug1j/does_redux_state_populate_after_useeffect/
-
-  //   if (user) {
-  //     socket.emit("setup", user);
-  //     console.log(socket);
-  //     socket.on("connect", () => {
-  //       setSocketConnected(true);
-  //     });
-
-  //     return () => {
-  //       // socket.disconnect();
-  //     };
-  //   }
-  // }, [user, socket]);
-
   useEffect(() => {
     if (user) {
-      getClanDetails();
-      getClanMessages();
+      getProfileDetails(id);
+      getPersonalMessages();
       setCurrentPage(2);
       setHasMore(true);
     }
 
-    selectedChatCompare = clanId;
-  }, [clanId, user]);
+    selectedChatCompare = id;
+  }, [id, user]);
 
   useEffect(() => {
     socket?.on("message-received", (newmessage) => {
-      if (!selectedChatCompare || selectedChatCompare !== newmessage.clan) {
+      if (
+        !selectedChatCompare ||
+        selectedChatCompare !== newmessage.sender?._id
+      ) {
         //give notification
+        console.log("hi");
       } else {
         setAllMessages([...allmessage, newmessage]);
       }
@@ -138,14 +137,13 @@ export default function GroupChat() {
   const SendMessage = async () => {
     try {
       dispatch(SetLoader(true));
-      const response = await SendMessageApi(content, clanId);
+      const response = await SendPersonalMessageApi(content, id);
       dispatch(SetLoader(false));
       if (response.success) {
         SetContent("");
 
         setAllMessages([...allmessage, response.newmessage]);
-
-        socket.emit("new-message", response.newmessage, clan);
+        socket.emit("new-message", response.newmessage, undefined, id, roomID);
       } else {
         throw new Error(response.message);
       }
@@ -162,18 +160,18 @@ export default function GroupChat() {
       <div className="h-[15vh] relative flex items-center justify-start gap-2 p-2 bg-custom-black-4">
         <div className="border-box   p-2 flex justify-center items-center aspect-square">
           <img
-            src={modernclan1}
+            src={profile?.profilepicture || defaultpicture}
             className="h-20 aspect-square rounded-full "
             alt="chess.com"
           />
         </div>
         <h1
           onClick={() => {
-            navigate(`/clan/${clan._id}`);
+            navigate(`/profile/${profile._id}`);
           }}
           className="text-3xl Bevan-font cursor-pointer"
         >
-          {clan?.name}
+          {profile?.username}
         </h1>
         <div
           className="absolute right-10"
@@ -185,7 +183,6 @@ export default function GroupChat() {
       {showOptionsMenu ? (
         <div className="absolute right-10 mt-20 p-5 w-[20vh] duration-300 bg-black ease-out rounded-lg z-[100]">
           <ul className="flex flex-col gap-5 cursor-pointer">
-            <li>Leave Clan</li>
             <li>Report</li>
           </ul>
         </div>
@@ -213,13 +210,11 @@ export default function GroupChat() {
           {allmessage?.length >= 1 ? (
             allmessage
               .toReversed()
-              .map((message) => (
-                <Message message={message} Leader={clan?.leader} />
-              ))
+              .map((message) => <Message message={message} Leader={false} />)
           ) : (
             <>
-              <div>
-                <h1>clan does not have any message.</h1>
+              <div className="flex justify-center">
+                <h1>Send some message to start chatting</h1>
               </div>
             </>
           )}

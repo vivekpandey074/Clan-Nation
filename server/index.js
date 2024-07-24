@@ -23,7 +23,7 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-
+app.set("io", io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -37,6 +37,7 @@ io.on("connection", (socket) => {
 
   socket.on("setup", (userData) => {
     socket.join(userData._id);
+
     console.log("setup");
     // socket.emit("connected");
   });
@@ -46,16 +47,16 @@ io.on("connection", (socket) => {
     console.log("User Joined Room: " + roomID);
   });
 
-  socket.on("new-message", (newmessage, clan) => {
-    var clanId = newmessage.clanId;
+  socket.on("new-message", (newmessage, clan, friendID, roomID) => {
+    if (clan) {
+      clan?.members.forEach((user) => {
+        if (user._id === newmessage.sender) return;
 
-    // console.log("New message send:", newmessage, clan);
-
-    clan?.members.forEach((user) => {
-      if (user._id === newmessage.sender) return;
-
-      socket.in(user._id).emit("message-received", newmessage);
-    });
+        socket.in(user._id).emit("message-received", newmessage);
+      });
+    } else if (friendID) {
+      socket.in(roomID).emit("message-received", newmessage);
+    }
   });
 
   socket.on("disconnect", () => {

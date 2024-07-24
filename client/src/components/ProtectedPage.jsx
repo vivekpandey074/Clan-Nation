@@ -11,6 +11,7 @@ export default function ProtectedPage({ children }) {
   const dispatch = useDispatch();
 
   const validateToken = async () => {
+    console.log("validating....");
     try {
       dispatch(SetLoader(true));
       const response = await GetCurrentUser();

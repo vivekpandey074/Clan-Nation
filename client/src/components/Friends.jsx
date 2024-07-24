@@ -1,14 +1,48 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
-import profliepic from "../assets/profilepic.jpeg";
+import { useSelector } from "react-redux";
+import { SearchUserApi } from "../apis/users";
+import { toast } from "react-toastify";
+import defaultuserimage from "../assets/defaultuserimage.png";
 
 export default function Friends() {
-  const joinedclans = [{}];
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [fetchedUsernames, setFetchedUsernames] = useState([]);
+  const { user } = useSelector((state) => state.users);
+  const [showSearchResult, setShowSearchResult] = useState(false);
 
-  const handleSubmit = async () => {};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      const response = await SearchUserApi(query);
+      setLoading(false);
+      if (response.success) {
+        setFetchedUsernames(response.users);
+        setShowSearchResult(true);
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setLoading(false);
+      toast.error(
+        err.message || "Something went wrong while fetching username",
+        { position: "top-right" }
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (user && !query) {
+      console.log(user.friends);
+      setFetchedUsernames(user.friends);
+
+      setShowSearchResult(false);
+    }
+  }, [user, query]);
 
   return (
     <>
@@ -52,40 +86,43 @@ export default function Friends() {
               type="submit"
               className="text-white absolute end-2.5 bottom-2.5 bg-black hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm  px-4 py-2"
             >
-              Search
+              {loading ? "Searching..." : "Search"}
             </button>
           </div>
         </form>
       </div>
       <div>
-        {joinedclans?.length >= 1 ? (
-          joinedclans?.map((clan) => {
+        {fetchedUsernames?.length >= 1 ? (
+          fetchedUsernames?.map((item) => {
             return (
               <div
                 onClick={() => {
-                  navigate(`/chat/clan/${clan._id}`);
+                  showSearchResult
+                    ? navigate(`/profile/${item?._id}`)
+                    : navigate(`/chat/personal/${item?._id}`);
                 }}
-                className="flex gap-2 p-4 h-20 cursor-pointer hover:scale-105 ease-out duration-300 hover:bg-black rounded-lg  "
-                key={clan._id}
+                className={`flex gap-2 p-4 mb-5 h-20 cursor-pointer hover:scale-105 ease-out items-center gap-5 duration-300 hover:bg-black rounded-lg 
+                 `}
+                key={item?._id}
               >
                 <img
-                  src={profliepic}
-                  alt="clanimg"
+                  src={item?.profilepicture || defaultuserimage}
+                  alt="userimg"
                   className="aspect-square h-12 aspect-square rounded-full"
                 />
                 <div className="flex flex-col text-custom-gray-text  grow-[3]">
-                  <h1 className="text-xl">Roughwork</h1>
-                  <p className="text-sm">
-                    this is the lastest message send by him
-                  </p>
-                  <p className="text-sm"></p>
+                  <h1 className="text-xl">{item?.username}</h1>
                 </div>
               </div>
             );
           })
         ) : (
           <div>
-            <h1 className="text-white">No Notification for now</h1>
+            <h1 className="text-white">
+              {showSearchResult
+                ? `No user found for "${query}"`
+                : "You have no friend currently :)"}
+            </h1>
           </div>
         )}
       </div>

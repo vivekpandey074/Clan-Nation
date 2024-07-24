@@ -1,5 +1,7 @@
 const emitEvent = (req, event, users, data) => {
-  console.log("Event", event);
+  const io = req.app.get("io");
+  console.log(io);
+  io.to(users).emit(event, data);
 };
 
 const deleteFilesFromCloudinary = async (public_ids) => {};

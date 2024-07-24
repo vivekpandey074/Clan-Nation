@@ -32,10 +32,12 @@ export default function Message({ message, Leader }) {
           >
             {message.sender.username}
           </p>
-          <p className="text-sm">
-            {" "}
-            {message.sender._id === Leader ? "Leader" : "member"}
-          </p>
+          {Leader && (
+            <p className="text-sm">
+              {" "}
+              {message.sender._id === Leader ? "Leader" : "member"}
+            </p>
+          )}
         </div>
         <p className="absolute right-0 text-sm ">
           {new Date(message?.createdAt).toLocaleDateString("en-US", options)}

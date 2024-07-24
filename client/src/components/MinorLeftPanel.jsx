@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 export default function MinorLeftPanel() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { count } = useSelector((state) => state.notifications);
   const [tab, setTab] = useState(1);
 
   const getJoinedClans = async () => {
@@ -94,11 +95,19 @@ export default function MinorLeftPanel() {
           </button>
           <button
             onClick={() => setTab(3)}
-            className={`    items-center gap-2 flex  px-2  rounded-sm ${
+            className={`items-center gap-2 flex  px-2  rounded-sm ${
               tab === 3 ? "bg-custom-black-1" : ""
             }`}
           >
-            <img src={bellicon} className="h-4 aspect-square" />
+            <div className="relative ">
+              {count > 0 && (
+                <div className="rounded-full h-3 p-1 w-auto flex items-center left-[-5px] top-[-5px] w-2 bg-red-500 text-[10px] absolute">
+                  {count}
+                </div>
+              )}
+              <img src={bellicon} className="h-4 aspect-square " />
+            </div>
+
             <p>Notifications</p>
           </button>
         </div>
