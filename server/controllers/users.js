@@ -8,11 +8,12 @@ const ApiError = require("../utils/ApiError.js");
 const Request = require("../models/requestModel.js");
 const { emitEvent } = require("../utils/features.js");
 const axios = require("axios");
-const { request } = require("http");
+
 const {
   NEW_REQUEST,
   REFETCH_NOTIFICATIONS,
-  REFETCH_PROFILE,
+  UPDATE_FRIENDSHIP_STATUS,
+  REFETCH_FRIEND_LIST,
 } = require("../constants/event.js");
 
 const handleUserRegistration = asyncHandler(async (req, res, next) => {
@@ -197,7 +198,12 @@ const handleSendRequest = asyncHandler(async (req, res) => {
 
   const newrequest = await Request.create(requestObj);
 
-  emitEvent(req, NEW_REQUEST, [receiverID], newrequest);
+  const populatedObj = await Request.findById(newrequest._id).populate(
+    "sender"
+  );
+
+  emitEvent(req, NEW_REQUEST, [receiverID], populatedObj);
+  emitEvent(req, UPDATE_FRIENDSHIP_STATUS, [receiverID]);
 
   return res.status(200).send({
     success: true,
@@ -219,20 +225,35 @@ const handleAcceptRequest = asyncHandler(async (req, res) => {
 
   if (!sender) throw new ApiError(404, "Sender not found");
 
-  const me = await User.findById(userId);
+  const me = await User.findById(userId).populate("friends");
+
+  let updatedUser = me;
+  let updatedFriend = sender;
 
   if (accept) {
-    await sender.updateOne({
-      $addToSet: {
-        friends: userId,
+    updatedFriend = await User.findOneAndUpdate(
+      { _id: request.sender._id.toString() },
+      {
+        $addToSet: {
+          friends: userId,
+        },
       },
-    });
+      {
+        new: true,
+      }
+    ).populate("friends");
 
-    await me.updateOne({
-      $addToSet: {
-        friends: sender._id,
+    updatedUser = await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $addToSet: {
+          friends: sender._id,
+        },
       },
-    });
+      {
+        new: true,
+      }
+    ).populate("friends");
   }
 
   await request.updateOne({
@@ -241,50 +262,81 @@ const handleAcceptRequest = asyncHandler(async (req, res) => {
     },
   });
 
-  emitEvent(req, REFETCH_NOTIFICATIONS, [userId]);
-  emitEvent(req, REFETCH_PROFILE, [userId]);
+  // emitEvent(req, REFETCH_NOTIFICATIONS, [userId]);
+
+  emitEvent(req, UPDATE_FRIENDSHIP_STATUS, [
+    userId,
+    request.sender._id.toString(),
+  ]);
+
+  if (accept)
+    emitEvent(
+      req,
+      REFETCH_FRIEND_LIST,
+      [request.sender._id.toString()],
+      updatedFriend
+    );
 
   res.status(200).send({
     success: true,
     message: `Request ${accept ? "accepted" : "rejected"}`,
+    updatedUser,
   });
 });
 
-const handleVerifyCodeforces = async (req, res) => {
-  try {
-    const { username } = req.body;
+const handleUnfriend = asyncHandler(async (req, res) => {
+  const { friendID, userId } = req.body;
 
-    const response = await axios.get(
-      `https://codeforces.com/api/user.rating?handle=${username}`
-    );
+  const friend = await User.findById(friendID);
+  if (!friend) throw new ApiError(400, `Profile not found`);
 
-    console.log(username);
-    const response2 = await axios.get(
-      `https://codeforces.com/api/user.status?handle=${username}&from=1&count=10`
-    );
+  const me = await User.findById(userId);
 
-    if (response2?.data?.result[0].problem?.name === "Watermelon") {
-      await User.findByIdAndUpdate(req.body?.userId, {
-        codeforces_account: username,
-      });
+  const friendFriendList = friend.friends;
+  const myFriendList = me.friends;
 
-      res.send({
-        success: true,
-        message: "User Connected to codeforces successfully.",
-      });
-    } else {
-      throw new ApiError(
-        400,
-        "Can't find the submission for watermelon problem"
-      );
+  const updatedFriendFriendList = friendFriendList.filter((item) => {
+    return item.toString() !== userId;
+  });
+
+  const updateMyFriendList = myFriendList.filter((item) => {
+    return item.toString() !== friendID;
+  });
+
+  const updatedFriend = await User.findOneAndUpdate(
+    { _id: friendID },
+    {
+      $set: {
+        friends: updatedFriendFriendList,
+      },
+    },
+    {
+      new: true,
     }
-  } catch (err) {
-    res.status(400).send({
-      success: false,
-      message: err?.response?.data?.comment || err.message,
-    });
-  }
-};
+  ).populate("friends");
+
+  const updatedUser = await User.findOneAndUpdate(
+    { _id: userId },
+    {
+      $set: {
+        friends: updateMyFriendList,
+      },
+    },
+    {
+      new: true,
+    }
+  ).populate("friends");
+
+  emitEvent(req, UPDATE_FRIENDSHIP_STATUS, [friendID]);
+
+  emitEvent(req, REFETCH_FRIEND_LIST, [friendID], updatedFriend);
+
+  res.status(200).send({
+    success: true,
+    message: "Unfriend successfull",
+    updatedUser,
+  });
+});
 
 const handleUserFriendStatus = asyncHandler(async (req, res) => {
   const { friendID } = req.query;
@@ -327,41 +379,40 @@ const handleUserFriendStatus = asyncHandler(async (req, res) => {
   });
 });
 
-const handleUnfriend = asyncHandler(async (req, res) => {
-  const { friendID, userId } = req.body;
+const handleVerifyCodeforces = async (req, res) => {
+  try {
+    const { username } = req.body;
 
-  const friend = await User.findById(friendID);
-  if (!friend) throw new ApiError(400, `Profile not found`);
+    const response = await axios.get(
+      `https://codeforces.com/api/user.rating?handle=${username}`
+    );
 
-  const me = await User.findById(userId);
+    const response2 = await axios.get(
+      `https://codeforces.com/api/user.status?handle=${username}&from=1&count=10`
+    );
 
-  const friendFriendList = friend.friends;
-  const myFriendList = me.friends;
+    if (response2?.data?.result[0].problem?.name === "Watermelon") {
+      await User.findByIdAndUpdate(req.body?.userId, {
+        codeforces_account: username,
+      });
 
-  const updatedFriendFriendList = friendFriendList.filter((item) => {
-    return item.toString() !== userId;
-  });
-
-  const updateMyFriendList = myFriendList.filter((item) => {
-    return item.toString() !== friendID;
-  });
-
-  await friend.updateOne({
-    $set: {
-      friends: updatedFriendFriendList,
-    },
-  });
-  await me.updateOne({
-    $set: {
-      friends: updateMyFriendList,
-    },
-  });
-
-  res.status(200).send({
-    success: true,
-    message: "Unfriend successfull",
-  });
-});
+      res.send({
+        success: true,
+        message: "User Connected to codeforces successfully.",
+      });
+    } else {
+      throw new ApiError(
+        400,
+        "Can't find the submission for watermelon problem"
+      );
+    }
+  } catch (err) {
+    res.status(400).send({
+      success: false,
+      message: err?.response?.data?.comment || err.message,
+    });
+  }
+};
 
 const handleAllNotifications = asyncHandler(async (req, res) => {
   const { userId } = req.body;

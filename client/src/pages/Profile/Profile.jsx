@@ -17,16 +17,19 @@ import addfriend from "../../assets/addfriend.svg";
 import unfriend from "../../assets/unfriend.svg";
 import pending from "../../assets/pending.svg";
 import { CheckFriendShipStatus } from "../../apis/users";
-import { REFETCH_PROFILE } from "../../constants/events";
+import { UPDATE_FRIENDSHIP_STATUS } from "../../constants/events";
 import { SocketContext } from "../../socket";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import { SetUser } from "../../redux/userSlice";
 
 export default function Profile() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.users);
   const [status, setStatus] = useState("");
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState(null);
   const socket = useContext(SocketContext);
+  const [loadingSpinner, setLoadingSpinner] = useState(false);
 
   const getProfileDetails = async (id) => {
     try {
@@ -34,7 +37,8 @@ export default function Profile() {
       const response = await GetProfileApi(id);
       dispatch(SetLoader(false));
       if (response.success) {
-        setProfile(response.data);
+        setProfile(() => response.data);
+
         checkFriendShipStatus(response.data._id);
       } else {
         throw new Error(response.message);
@@ -52,15 +56,17 @@ export default function Profile() {
 
   const handleSendRequest = async (receiverID) => {
     try {
+      setLoadingSpinner(true);
       const response = await SendRequestApi(receiverID);
+      setLoadingSpinner(false);
       if (response.success) {
         toast.success(response.message);
-
-        if (profile) checkFriendShipStatus(profile._id);
+        if (profile) checkFriendShipStatus(receiverID);
       } else {
         throw new Error(response.message);
       }
     } catch (err) {
+      setLoadingSpinner(false);
       toast.error(err.message || "Something went wrong while sending request", {
         position: "top-right",
       });
@@ -69,13 +75,16 @@ export default function Profile() {
 
   const checkFriendShipStatus = async (friendID) => {
     try {
+      setLoadingSpinner(true);
       const response = await CheckFriendShipStatus(friendID);
+      setLoadingSpinner(false);
       if (response.success) {
         setStatus(response.friendStatus);
       } else {
         throw new Error(response.message);
       }
     } catch (err) {
+      setLoadingSpinner(false);
       toast.error(
         err.message || "Something went wrong while fetching friendship status",
         { position: "top-right" }
@@ -85,17 +94,18 @@ export default function Profile() {
 
   const handleRemoveFriend = async (friendID) => {
     try {
-      dispatch(SetLoader(true));
+      setLoadingSpinner(true);
       const response = await UnfriendApi(friendID);
-      dispatch(SetLoader(false));
+      setLoadingSpinner(false);
       if (response.success) {
         toast.success(response);
-        if (profile) checkFriendShipStatus(profile._id);
+        dispatch(SetUser(response.updatedUser));
+        if (profile) checkFriendShipStatus(friendID);
       } else {
         throw new Error(response.message);
       }
     } catch (err) {
-      dispatch(SetLoader(false));
+      setLoadingSpinner(false);
       toast.error(err.message || "Something went wrong while removing friend", {
         position: "top-right",
       });
@@ -103,15 +113,15 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && profile?._id !== id) {
       getProfileDetails(id);
     }
   }, [id, user]);
 
   useEffect(() => {
-    socket?.on(REFETCH_PROFILE, () => {
+    socket?.on(UPDATE_FRIENDSHIP_STATUS, () => {
       if (user) {
-        getProfileDetails(id);
+        if (profile) checkFriendShipStatus(profile._id);
       }
     });
   });
@@ -121,13 +131,13 @@ export default function Profile() {
       <div
         className="w-full h-[30vh] relative  bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url(${profile.coverImage || defaultcover})`,
+          backgroundImage: `url(${profile?.coverImage || defaultcover})`,
         }}
       >
         <div
           className="rounded-full ms-5   absolute bottom-[-20vh] bg-no-repeat bg-center bg-cover h-[40vh] aspect-square  overflow-hidden"
           style={{
-            backgroundImage: `url(${profile.profilepicture || defaultuser})`,
+            backgroundImage: `url(${profile?.profilepicture || defaultuser})`,
           }}
         ></div>
       </div>
@@ -135,33 +145,37 @@ export default function Profile() {
         <div className="text-custom-gray-text   w-7/12 h-[25vh] ms-[50vh] p-5">
           <div className="flex  items-center justify-between">
             {" "}
-            <h1 className="text-5xl mb-5">@{profile.username}</h1>{" "}
-            <img
-              src={
-                status === "friend"
-                  ? unfriend
-                  : status === "pending"
-                  ? pending
-                  : addfriend
-              }
-              alt=""
-              onClick={
-                status === "friend"
-                  ? () => {
-                      handleRemoveFriend(profile?._id);
-                    }
-                  : status === "pending"
-                  ? () => {}
-                  : () => {
-                      handleSendRequest(profile?._id);
-                    }
-              }
-              className={`h-10 hover:scale-110 duration-300 cursor-pointer aspect-square rounded-full ${
-                user?._id === profile?._id ? "invisible" : ""
-              }`}
-            />
+            <h1 className="text-5xl mb-5">@{profile?.username}</h1>{" "}
+            {loadingSpinner ? (
+              <LoadingSpinner />
+            ) : (
+              <img
+                src={
+                  status === "friend"
+                    ? unfriend
+                    : status === "pending"
+                    ? pending
+                    : addfriend
+                }
+                alt=""
+                onClick={
+                  status === "friend"
+                    ? () => {
+                        handleRemoveFriend(profile?._id);
+                      }
+                    : status === "pending"
+                    ? () => {}
+                    : () => {
+                        handleSendRequest(profile?._id);
+                      }
+                }
+                className={`h-10 hover:scale-110 duration-300 cursor-pointer aspect-square rounded-full ${
+                  user?._id === profile?._id ? "invisible" : ""
+                }`}
+              />
+            )}
           </div>
-          <p>{profile.bio}</p>
+          <p>{profile?.bio}</p>
         </div>
         <div className=" w-full h-[40vh] flex overflow-scroll no-scrollbar justify-evenly items-center">
           <UserRatingsCard

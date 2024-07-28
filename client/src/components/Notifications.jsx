@@ -5,12 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { SocketContext } from "../socket";
 import { NEW_REQUEST, REFETCH_NOTIFICATIONS } from "../constants/events";
 import { useDispatch } from "react-redux";
-
+import { SetUser } from "../redux/userSlice";
 export default function Notifications() {
   const [allNotification, setAllNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [countNotification, setNotifications] = useState(0);
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const socket = useContext(SocketContext);
@@ -40,7 +40,8 @@ export default function Notifications() {
       setLoading(false);
       if (response.success) {
         toast.success(response.message);
-        window.location.reload();
+        handleGetAllNotifications();
+        if (accept) dispatch(SetUser(response.updatedUser));
       } else {
         throw new Error(response.message);
       }
@@ -54,16 +55,16 @@ export default function Notifications() {
   };
   useEffect(() => {
     handleGetAllNotifications();
-  }, [socket]);
+  }, []);
 
   useEffect(() => {
-    socket?.on(NEW_REQUEST, (newnotification) => {
-      setAllNotifications((prev) => [...prev, newnotification]);
-    });
-
-    socket?.on(REFETCH_NOTIFICATIONS, () => {
+    socket?.on(NEW_REQUEST, () => {
       handleGetAllNotifications();
     });
+
+    // socket?.on(REFETCH_NOTIFICATIONS, () => {
+    //   handleGetAllNotifications();
+    // });
   });
 
   return (
@@ -77,13 +78,17 @@ export default function Notifications() {
           return (
             <div
               key={request._id}
-              onClick={() => {
-                navigate(`/profile/${request.sender?._id}`);
-              }}
               className="flex flex-col text-custom-gray-text gap-5 p-4 cursor-pointer bg-custom-black-4 ease-out duration-300 hover:bg-black rounded-lg  "
             >
               <h1 className="text-xl text-white">
-                ⚔️ {request?.sender?.username}{" "}
+                <span
+                  onClick={() => {
+                    navigate(`/profile/${request.sender?._id}`);
+                  }}
+                >
+                  {" "}
+                  ⚔️ {request?.sender?.username}{" "}
+                </span>
                 <span className="text-sm text-custom-gray-text">
                   {" "}
                   sent you friend request

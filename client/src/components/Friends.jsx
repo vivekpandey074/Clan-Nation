@@ -1,18 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { SearchUserApi } from "../apis/users";
 import { toast } from "react-toastify";
 import defaultuserimage from "../assets/defaultuserimage.png";
+import { SocketContext } from "../socket";
+import { REFETCH_FRIEND_LIST } from "../constants/events";
+import { SetUser } from "../redux/userSlice";
 
 export default function Friends() {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [fetchedUsernames, setFetchedUsernames] = useState([]);
+
   const { user } = useSelector((state) => state.users);
   const [showSearchResult, setShowSearchResult] = useState(false);
+  const socket = useContext(SocketContext);
+  const dispatch = useDispatch();
+  const [fetchedUsernames, setFetchedUsernames] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,12 +43,17 @@ export default function Friends() {
 
   useEffect(() => {
     if (user && !query) {
-      console.log(user.friends);
       setFetchedUsernames(user.friends);
 
       setShowSearchResult(false);
     }
   }, [user, query]);
+
+  useEffect(() => {
+    socket?.on(REFETCH_FRIEND_LIST, (updatedFriend) => {
+      dispatch(SetUser(updatedFriend));
+    });
+  });
 
   return (
     <>
